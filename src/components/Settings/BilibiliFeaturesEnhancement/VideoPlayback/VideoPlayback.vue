@@ -12,6 +12,7 @@ import { normalizeWheelVolumeStep } from '~/utils/wheelVolume'
 import SettingsItem from '../../components/SettingsItem.vue'
 import SettingsItemGroup from '../../components/SettingsItemGroup.vue'
 import SettingsItemSubgroup from '../../components/SettingsItemSubgroup.vue'
+import SettingsSearchContainer from '../../components/SettingsSearchContainer.vue'
 import SettingsToggleTag from '../../components/SettingsToggleTag.vue'
 import PlaybackRate from './PlaybackRate.vue'
 
@@ -350,7 +351,7 @@ const playerDefaultStateOptions = computed<{ label: string, value: PlayerDefault
         :title="t('settings.group_playback_memory')"
         :desc="t('settings.group_playback_memory_desc')"
       >
-        <div class="video-setting-tags" role="group" :aria-label="t('settings.group_playback_memory')">
+        <SettingsSearchContainer class="video-setting-tags" role="group" :aria-label="t('settings.group_playback_memory')">
           <SettingsToggleTag
             v-for="option in playbackMemoryOptions"
             :key="option.setting"
@@ -358,9 +359,10 @@ const playerDefaultStateOptions = computed<{ label: string, value: PlayerDefault
             :label="option.label"
             :icon="option.icon"
             :show-state-icon="false"
+            searchable
             @update:model-value="updatePlaybackMemory(option.setting, $event)"
           />
-        </div>
+        </SettingsSearchContainer>
 
         <Dialog
           v-if="showVideoQualityMemoryConfirm"
@@ -402,14 +404,6 @@ const playerDefaultStateOptions = computed<{ label: string, value: PlayerDefault
           right-width="auto"
         >
           <Radio v-model="settings.expandVideoDescByDefault" />
-        </SettingsItem>
-
-        <SettingsItem
-          :title="t('settings.show_vertical_video_zoom_button')"
-          :desc="t('settings.show_vertical_video_zoom_button_desc')"
-          right-width="auto"
-        >
-          <Radio v-model="settings.showVerticalVideoZoomButton" />
         </SettingsItem>
 
         <SettingsItem

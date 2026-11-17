@@ -30,21 +30,14 @@ export const noCookieForYouRecommendationState = useStorageLocal<NoCookieForYouR
   { mergeDefaults: true, writeDefaults: false },
 )
 
-export interface MomentsWantedUser {
+export interface MomentsPinnedUser {
   mid: string
   name: string
   face: string
 }
 
-/** Bewly 动态页“想看”分组；缓存用户资料以避免每次进入页面重复请求。 */
-export const momentsWantedUsers = useStorageLocal<MomentsWantedUser[]>(
-  'momentsWantedUsers',
-  [],
-  { writeDefaults: false },
-)
-
-/** Bewly 动态页横向栏右侧“固定 UP”；与想看名单独立存储。 */
-export const momentsPinnedUsers = useStorageLocal<MomentsWantedUser[]>(
+/** Bewly 动态页横向栏右侧“固定 UP”名单；缓存用户资料以避免每次进入页面重复请求。 */
+export const momentsPinnedUsers = useStorageLocal<MomentsPinnedUser[]>(
   'momentsPinnedUsers',
   [],
   { writeDefaults: false },
@@ -100,7 +93,6 @@ export interface ShortcutsSettings {
   turnOffLight?: BaseShortcutSetting // I
   caption?: BaseShortcutSetting // C
   videoScreenshot?: BaseShortcutSetting // Shift+S
-  listenVideo?: BaseShortcutSetting // Shift+M
   increasePlaybackRate?: BaseShortcutSetting // +
   decreasePlaybackRate?: BaseShortcutSetting // -
   resetPlaybackRate?: BaseShortcutSetting // 0
@@ -172,10 +164,6 @@ export type CustomPlayOrderOverrides = Record<CustomPlayOrderContext, CustomPlay
 export type CollectedSeasonPlayAllMode = 'beginning' | 'latest' | 'lastWatched'
 export type DefaultVideoPlayerMode = 'default' | 'webFullscreen' | 'widescreen' | 'bewlyWidescreen'
 export type VideoPlayerScrollMode = 'sendingBar' | 'playerCenter'
-export type ListenVideoCoverShape = 'circle' | 'square' | 'rectangle'
-export type ListenVideoGlowMode = 'none' | 'static' | 'breathe'
-export type ListenVideoGlowColor = 'theme' | 'cover'
-export type ListenVideoBackgroundMode = 'solid' | 'blur'
 export type BewlyWidescreenSidebarPosition = 'left' | 'right'
 export type BewlyWidescreenSidebarPriority = 'video' | 'sidebar'
 export type PlayerDefaultState = 'system' | 'remember' | 'on' | 'off'
@@ -462,7 +450,6 @@ export interface Settings {
   momentsOnlyCoverVideoPreview: boolean
   /** Bewly 动态页期望列数；窄屏会自动降列 */
   momentsGridColumns: MomentsGridColumns
-  momentsEnableWantedFilter: boolean
   /** Bewly 动态页标签栏右侧显示动态过滤入口 */
   momentsShowFilterEntry: boolean
   momentsFilterUpRecommendation: boolean
@@ -641,16 +628,9 @@ export interface Settings {
   enableVideoPlayerModeOverrides: boolean // 启用按场景覆盖播放器显示模式
   videoPlayerModeOverrides: VideoPlayerModeOverrides // 不同播放场景的显示模式覆盖
   autoExitFullscreenOnEnd: boolean // 全屏播放完毕后自动退出
-  showVerticalVideoZoomButton: boolean // 显示竖屏视频放大按钮
   showBewlyWidescreenButton: boolean // 显示播放器 Bewly 宽屏按钮
   showVideoScreenshotButton: boolean // 显示播放器截图按钮
   showVideoPipButton: boolean // 显示播放器画中画按钮
-  enableListenVideo: boolean // 听视频功能总开关
-  showListenVideoButton: boolean // 显示播放器听视频按钮
-  listenVideoCoverShape: ListenVideoCoverShape // 听视频封面形状（圆形唱片旋转，方/矩形静止）
-  listenVideoGlow: ListenVideoGlowMode // 听视频封面背景光晕
-  listenVideoGlowColor: ListenVideoGlowColor // 听视频光晕颜色来源
-  listenVideoBackground: ListenVideoBackgroundMode // 听视频背景样式（纯色或封面模糊）
 
   // 自动连播总开关
   useBilibiliDefaultAutoPlay: boolean // 使用B站默认自动播放行为（总开关）
@@ -856,7 +836,6 @@ export const originalSettings: Settings = {
   momentsVideoPreviewDelayed: false,
   momentsOnlyCoverVideoPreview: true,
   momentsGridColumns: '2',
-  momentsEnableWantedFilter: true,
   momentsShowFilterEntry: true,
   momentsFilterUpRecommendation: false,
   momentsHideChargeExclusive: false,
@@ -1022,16 +1001,9 @@ export const originalSettings: Settings = {
     momentsDialog: 'inherit',
   },
   autoExitFullscreenOnEnd: false, // 全屏播放完毕后自动退出，默认关闭
-  showVerticalVideoZoomButton: true, // 默认显示竖屏视频放大按钮
   showBewlyWidescreenButton: true, // 默认显示播放器 Bewly 宽屏按钮
   showVideoScreenshotButton: true, // 默认显示播放器截图按钮
   showVideoPipButton: true, // 默认显示播放器画中画按钮
-  enableListenVideo: false, // 默认关闭听视频功能，需在设置中手动开启
-  showListenVideoButton: true, // 默认显示播放器听视频按钮
-  listenVideoCoverShape: 'circle', // 默认圆形唱片并保持旋转
-  listenVideoGlow: 'none', // 默认关闭光晕，保持原有听视频外观
-  listenVideoGlowColor: 'theme', // 默认光晕使用主题色
-  listenVideoBackground: 'solid', // 默认纯色背景
 
   // 自动连播总开关
   useBilibiliDefaultAutoPlay: true, // 使用B站默认自动播放行为（总开关），默认开启
@@ -1061,7 +1033,6 @@ export const originalSettings: Settings = {
     turnOffLight: { key: 'I', enabled: true },
     caption: { key: 'C', enabled: true },
     videoScreenshot: { key: 'Shift+S', enabled: true },
-    listenVideo: { key: 'Shift+M', enabled: true },
     increasePlaybackRate: { key: '+', enabled: true },
     decreasePlaybackRate: { key: '-', enabled: true },
     resetPlaybackRate: { key: '0', enabled: true },
@@ -1449,6 +1420,26 @@ export const settings = useSettingsStorage(originalSettings, {
     Reflect.deleteProperty(record, 'enableIndependentAutoPlay')
     Reflect.deleteProperty(record, 'independentAutoPlayStates')
 
+    // 听视频功能已移除，清理旧版本保存的设置与快捷键。
+    for (const key of [
+      'enableListenVideo',
+      'showListenVideoButton',
+      'listenVideoCoverShape',
+      'listenVideoGlow',
+      'listenVideoGlowColor',
+      'listenVideoBackground',
+    ]) {
+      Reflect.deleteProperty(record, key)
+    }
+    if (record.shortcuts)
+      Reflect.deleteProperty(record.shortcuts, 'listenVideo')
+
+    // 竖屏放大功能已移除，清理旧版本保存的显示开关。
+    Reflect.deleteProperty(record, 'showVerticalVideoZoomButton')
+
+    // 「想看」分组已移除，清理旧版本保存的开关。
+    Reflect.deleteProperty(record, 'momentsEnableWantedFilter')
+
     const legacyRandomPlayOrder = record.randomPlayOrder
     if (
       record.customPlayDefaultEnabled === true
@@ -1529,13 +1520,6 @@ export const settings = useSettingsStorage(originalSettings, {
       record.shortcuts = {
         ...record.shortcuts,
         videoScreenshot: { ...originalSettings.shortcuts.videoScreenshot },
-      }
-    }
-
-    if (!record.shortcuts?.listenVideo) {
-      record.shortcuts = {
-        ...record.shortcuts,
-        listenVideo: { ...originalSettings.shortcuts.listenVideo },
       }
     }
 
@@ -1652,7 +1636,7 @@ export const settings = useSettingsStorage(originalSettings, {
   },
 })
 
-void browser.storage.local.remove(['gridBreakpoints']).catch(() => {})
+void browser.storage.local.remove(['gridBreakpoints', 'momentsWantedUsers', 'momentsFeedCache']).catch(() => {})
 
 export type GridLayoutType = 'adaptive' | 'twoColumns' | 'oneColumn'
 
