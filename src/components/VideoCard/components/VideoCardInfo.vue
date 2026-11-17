@@ -686,6 +686,9 @@ const content = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+$video-card-chip-padding-block: calc(var(--bew-base-font-size) * 0.12);
+$video-card-meta-row-height: max(24px, calc(1lh + 2 * #{$video-card-chip-padding-block}));
+
 .video-card-stat-separator {
   font-weight: var(--bew-font-weight-regular);
 }
@@ -719,9 +722,10 @@ const content = computed(() => {
   --uno: "opacity-100";
 }
 
+// UP 主名与标签行的高度都随各自的字号设置变化，这里只保证最小高度：
+// 固定为 46px 时，调大字号后溢出部分被裁掉，标签胶囊的下缘会被切平。
 .video-card-meta {
   min-height: 46px;
-  max-height: 46px;
   overflow: hidden;
 }
 
@@ -732,7 +736,6 @@ const content = computed(() => {
 // 单行布局：只占一行高度并顶部对齐，UP 主名最多占一半宽度，其余留给标签
 .video-card-meta--compact {
   min-height: 24px;
-  max-height: 24px;
 }
 
 .video-card-meta--compact .video-card-meta__author {
@@ -766,6 +769,10 @@ const content = computed(() => {
   max-width: 100%;
   min-height: 24px;
   max-height: 24px;
+  // 胶囊高度 = 行高 + 上下 padding，随「标签字号」变化。行固定为 24px 时，
+  // 较大字号的胶囊会超出并被上下裁掉；不支持 lh 单位的浏览器沿用上面的 24px。
+  min-height: $video-card-meta-row-height;
+  max-height: $video-card-meta-row-height;
 }
 
 .video-card-meta__chip {
@@ -773,7 +780,7 @@ const content = computed(() => {
   align-items: center;
   font-size: inherit;
   line-height: inherit;
-  padding-block: calc(var(--bew-base-font-size) * 0.12);
+  padding-block: $video-card-chip-padding-block;
 }
 
 .video-card-meta-row > * {
