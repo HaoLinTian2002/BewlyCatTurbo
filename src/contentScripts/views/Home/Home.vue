@@ -41,6 +41,9 @@ const handleThrottledBackToTop = useThrottleFn((targetScrollTop: number = 0) => 
 
 // ✅ 性能优化：缓存 scrollTop 值，避免重复 DOM 读取
 const cachedScrollTop = ref(0)
+const HOME_HEADER_SCROLL_THRESHOLD = 20
+const homeHeaderScrollHidden = ref(false)
+let homeHeaderAnchorScrollTop = 0
 const tabScrollPositions = new Map<string, number>()
 let pendingTabScrollTop: number | null = null
 let preserveSwitchPosition = false
@@ -203,7 +206,29 @@ watch(() => settings.value.homePageTabVisibilityList, () => {
 }, { deep: true })
 
 function handleOverlayScroll(scrollTop: number) {
+  const scrollDelta = scrollTop - cachedScrollTop.value
   cachedScrollTop.value = scrollTop
+  syncHomeHeaderScrollVisibility(scrollTop, scrollDelta)
+}
+
+// 固定的标签栏下滑时收起、上滑时恢复，阈值与顶栏的滚动显隐保持一致。
+function syncHomeHeaderScrollVisibility(scrollTop: number, scrollDelta: number) {
+  // 未固定、切换栏目的程序滚动，或还没滚过栏目内容起点（含搜索页模式的搜索区）时保持显示。
+  if (!settings.value.fixedHomeTabsOnHomePage || isHomeTabSwitching.value || isWithinHomeContentStart(scrollTop)) {
+    homeHeaderScrollHidden.value = false
+    homeHeaderAnchorScrollTop = scrollTop
+    return
+  }
+
+  const hidden = homeHeaderScrollHidden.value
+  // 继续沿当前状态的方向滚动只移动锚点，反向累计超过阈值才切换，避免抖动。
+  if (hidden ? scrollDelta > 0 : scrollDelta < 0) {
+    homeHeaderAnchorScrollTop = scrollTop
+  }
+  else if (Math.abs(scrollTop - homeHeaderAnchorScrollTop) > HOME_HEADER_SCROLL_THRESHOLD) {
+    homeHeaderScrollHidden.value = !hidden
+    homeHeaderAnchorScrollTop = scrollTop
+  }
 }
 
 function handleTopBarVisibilityChange(visible: boolean) {
@@ -400,6 +425,7 @@ function toggleTabContentLoading(loading: boolean) {
           'home-header--recommendation-switcher': shouldShowRecommendationModeSwitcher,
           'home-header-fixed': settings.fixedHomeTabsOnHomePage,
           'home-header-fixed--search': settings.fixedHomeTabsOnHomePage && settings.useSearchPageModeOnHomePage,
+          'home-header--scroll-hidden': settings.fixedHomeTabsOnHomePage && homeHeaderScrollHidden && !isLayoutEditing,
         }"
         w-full z-9
       >
@@ -677,6 +703,28 @@ function toggleTabContentLoading(loading: boolean) {
 
 .home-header-fixed {
   --uno: "sticky top-[calc(var(--bew-top-bar-height)+10px)]";
+
+  // 收起动画加在各个胶囊面板上：给 header 本身设置 opacity 会让它成为
+  // backdrop root，面板的毛玻璃在过渡期间采不到背后内容。
+  > .home-tabs-panel,
+  > .home-header-actions > * {
+    transition:
+      opacity var(--bew-duration-normal) var(--bew-ease-standard),
+      transform var(--bew-duration-normal) var(--bew-ease-standard),
+      visibility var(--bew-duration-normal);
+  }
+}
+
+.home-header--scroll-hidden {
+  pointer-events: none;
+
+  > .home-tabs-panel,
+  > .home-header-actions > * {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--bew-space-2)));
+    // 收起后不参与键盘聚焦与读屏。
+    visibility: hidden;
+  }
 }
 
 .home-header-fixed--search {
@@ -718,6 +766,11 @@ function toggleTabContentLoading(loading: boolean) {
   .home-tab-enter-active,
   .home-tab-leave-active {
     transition: opacity 1ms linear;
+  }
+
+  .home-header-fixed > .home-tabs-panel,
+  .home-header-fixed > .home-header-actions > * {
+    transition-duration: 1ms;
   }
 }
 </style>
