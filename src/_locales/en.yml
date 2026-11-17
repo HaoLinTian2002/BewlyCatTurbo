@@ -1360,6 +1360,8 @@ settings:
   enlarge_favorite_dialog_desc: When enabled, the favorite dialog on video pages will be displayed in a larger size for easier viewing and management.
   external_watch_later_button: External watch later button
   external_watch_later_button_desc: Show a standalone Watch later button in the video toolbar. It displays the current state and can add or remove the video.
+  expand_video_desc_by_default: Expand video description by default
+  expand_video_desc_by_default_desc: Show the full description on video pages instead of the folded preview. You can still collapse it manually.
   show_vertical_video_zoom_button: Vertical video zoom button
   show_vertical_video_zoom_button_desc: Show zoom controls and the visible-area position control for vertical videos
   show_bewly_widescreen_button: Show player Bewly Widescreen button

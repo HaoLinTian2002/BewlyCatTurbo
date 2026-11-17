@@ -345,6 +345,7 @@ export interface Settings {
   enlargeFavoriteDialog: boolean // 视频页收藏夹放大样式增强
   enableSidebarCoverBlur: boolean // 页面侧栏封面高斯渐变背景
   externalWatchLaterButton: boolean // 稍后再看按钮外置
+  expandVideoDescByDefault: boolean // 视频页默认展开视频简介
   favoriteOrganizerFolders: FavoriteOrganizerFolder[] // 收藏夹整理：各目标收藏夹的规则组
   favoriteOrganizerSyncAfterTriple: boolean // 一键三连后按规则把视频同步到目标收藏夹
 
@@ -739,6 +740,7 @@ export const originalSettings: Settings = {
   enlargeFavoriteDialog: false, // 默认关闭收藏夹放大样式
   enableSidebarCoverBlur: true, // 默认启用页面侧栏封面高斯渐变背景
   externalWatchLaterButton: true, // 默认开启稍后再看按钮外置
+  expandVideoDescByDefault: false, // 默认沿用 B 站的简介折叠
   favoriteOrganizerFolders: [],
   favoriteOrganizerSyncAfterTriple: false,
 

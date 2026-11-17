@@ -51,6 +51,17 @@ html.bewly-design,
   background-image: none;
 }
 
+// 评论区首屏渲染前不让视频页左栏吸附：此时左栏很短，B 站会把它当成「已滚到底」
+// 固定住，只剩右侧推荐列表在滚动。B 站用内联 top 控制吸附位置，需要 !important。
+html.bewly-video-comments-pending .video-container-v1 .left-container.scroll-sticky {
+  top: auto !important;
+}
+
+// 默认展开视频简介：盖住 B 站挂载后写入的折叠高度。
+html.bewly-video-desc-expanded .video-desc-container .basic-desc-info {
+  height: auto !important;
+}
+
 html.bewly-custom-homepage > body {
   background-color: unset !important;
   transition: opacity 0.5s;

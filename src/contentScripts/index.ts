@@ -28,7 +28,7 @@ import { runWhenIdle } from '~/utils/lazyLoad'
 import { getLocalWallpaper, hasLocalWallpaper, isLocalWallpaperUrl, localWallpapersLoaded } from '~/utils/localWallpaper'
 import { getCookie, injectCSS, isElectron, isHomePage, isInIframe, isNotificationPage, isVideoOrBangumiPage, isVideoPlaybackPage, isWatchLaterListPage } from '~/utils/main'
 import { initNativeFavoriteSeasonPlayAllIntercept } from '~/utils/nativeFavoriteSeasonPlayAll'
-import { createPageSettingsPayload, writePageBootSnapshot } from '~/utils/pageSettingsProtocol'
+import { createPageSettingsPayload, NATIVE_WIDESCREEN_PRE_LAYOUT_RELEASE, readPageBootSnapshot, shouldPreApplyNativeWidescreen, writePageBootSnapshot } from '~/utils/pageSettingsProtocol'
 import { resolvePgcEpisodeVideoIds } from '~/utils/pgcEpisode'
 import { isPhotoViewerOpen } from '~/utils/photoViewer'
 import { applyAutoPlayByVideoType, applyDefaultCaptionState, applyDefaultDanmakuState, applyRememberedPlaybackRate, defaultMode, getVideoElement, handleVideoPageNavigation, isPlayerDisplayModeReady, isPlayerShowingEndingRecommendation, isVideoPage, resetAutoPlayUserChangeFlag, resolveDefaultVideoPlayerMode, startAutoExitFullscreenMonitoring, startAutoPlayUserChangeMonitoring, startPlaybackRateMonitoring, webFullscreen, widescreen } from '~/utils/player'
@@ -49,6 +49,8 @@ import { initAmbilightControl } from './ambilightControl'
 import { initBewlyWidescreenControl } from './bewlyWidescreenControl'
 import { setupFavoriteOrganizerTripleSync } from './features/favoriteOrganizerTripleSync'
 import { setupIframePhotoViewerDetector } from './features/iframePhotoViewerDetector'
+import type { InitialPlayerScrollAlignment } from './features/initialPlayerScroll'
+import { startInitialPlayerScrollAlignment } from './features/initialPlayerScroll'
 import { setupNativeHomeFeedHistory } from './features/nativeHomeFeedHistory'
 import { setupNotificationStateInvalidation } from './features/notificationStateInvalidation'
 import { setupOpusDetailDrawerLayout } from './features/opusDetailDrawerLayout'
@@ -56,6 +58,8 @@ import { setupOriginalMomentsFilter } from './features/originalMomentsFilter'
 import { setupOriginalMomentsFoldComments } from './features/originalMomentsFoldComments'
 import { verifyPageScriptVersion } from './features/pageScriptVersionCheck'
 import { setupSettingsPageBridge } from './features/settingsPageBridge'
+import { setupVideoDescAutoExpand } from './features/videoDescAutoExpand'
+import { setupVideoStickyScrollGuard } from './features/videoStickyScrollGuard'
 import { setupVideoWatchProgress } from './features/videoWatchProgress'
 import { setupWatchLaterAutoRemove } from './features/watchLaterAutoRemove'
 import { initFullscreenWheelVolume } from './fullscreenWheelVolume'
@@ -266,6 +270,8 @@ else if (shouldInitializeContentScript) {
   setupWatchLaterAutoRemove()
   setupFavoriteOrganizerTripleSync()
   setupVideoWatchProgress()
+  setupVideoDescAutoExpand()
+  setupVideoStickyScrollGuard()
   setupSettingsPageBridge()
   // Fix `OverlayScrollbars` not working in Firefox
   // https://github.com/fingerprintjs/fingerprintjs/issues/683#issuecomment-881210244
@@ -309,6 +315,47 @@ else if (shouldInitializeContentScript) {
   let urlChangeCheckQueued = false
   let playerModeResumeQueued = false
   let watchLaterButtonAdded = false // 标记稍后再看按钮是否已添加
+  // 页面脚本是否已在加载之初按原生宽屏排版（见 inject/nativeWidescreenPreLayout.ts）。
+  // 必须赶在设置水合改写快照之前读取，才能与页面脚本启动时看到的值一致。
+  let nativeWidescreenPreLayoutPending = shouldPreApplyNativeWidescreen(readPageBootSnapshot())
+  let initialPlayerScroll: InitialPlayerScrollAlignment | undefined
+  let initialPlayerScrollNavigationKey: string | undefined
+
+  // applied 为 true 表示已点击原生宽屏按钮，页面脚本等播放器进入宽屏后再交还排版；
+  // 其余情况立即按播放器当前状态恢复 B 站原生排版。
+  function releaseNativeWidescreenPreLayout(applied: boolean) {
+    if (!nativeWidescreenPreLayoutPending)
+      return
+    nativeWidescreenPreLayoutPending = false
+    window.postMessage({ type: NATIVE_WIDESCREEN_PRE_LAYOUT_RELEASE, applied }, window.location.origin)
+  }
+
+  // 排版从一开始就是最终形态（默认模式，或已提前按宽屏排版）时，加载之初就把
+  // 播放器对齐到设置的位置，不再等模式应用后延迟滚动。
+  function startInitialPlayerScroll() {
+    if (initialPlayerScroll
+      || !isVideoPage()
+      || !settings.value.enablePlayerEnhancements
+      || !settings.value.videoPlayerScroll
+      || document.documentElement.classList.contains(BEWLY_IFRAME_DRAWER_HOST_CLASS)) {
+      return
+    }
+
+    const mode = resolveNavigationPlayerMode()
+    if (mode !== 'default' && !(mode === 'widescreen' && nativeWidescreenPreLayoutPending))
+      return
+
+    initialPlayerScrollNavigationKey = getVideoNavigationKey(location.href)
+    initialPlayerScroll = startInitialPlayerScrollAlignment()
+  }
+
+  void settingsReady.then(() => {
+    // 按场景覆盖显示模式时要靠选集列表区分分 P 与合集，等 DOM 解析完再判断。
+    if (settings.value.enableVideoPlayerModeOverrides && document.readyState === 'loading')
+      document.addEventListener('DOMContentLoaded', startInitialPlayerScroll, { once: true })
+    else
+      startInitialPlayerScroll()
+  })
 
   // 设置水合后立即同步 i18n 语言。宽屏切换提示等轻 DOM 元素在 App 挂载前就会
   // 用 t() 渲染一次性文案，若等到 App.vue 里的语言 watcher 才切换 locale，
@@ -581,6 +628,7 @@ else if (shouldInitializeContentScript) {
       cancelPlayerModeApplication()
       clearPlaybackBehaviorTimer()
       exitBewlyWidescreen()
+      releaseNativeWidescreenPreLayout(false)
       return
     }
 
@@ -589,6 +637,7 @@ else if (shouldInitializeContentScript) {
       cancelPlayerModeApplication()
       clearPlaybackBehaviorTimer()
       exitBewlyWidescreen()
+      releaseNativeWidescreenPreLayout(false)
       return
     }
 
@@ -604,6 +653,7 @@ else if (shouldInitializeContentScript) {
     // 播放器增强关闭时完全交给 B 站原生播放器，快捷键由 onDOMLoaded 单独接管。
     if (!settings.value.enablePlayerEnhancements) {
       clearPlayerModeRetry()
+      releaseNativeWidescreenPreLayout(false)
       return
     }
 
@@ -615,6 +665,7 @@ else if (shouldInitializeContentScript) {
       clearPlayerModeRetry()
       cancelPlayerModeApplication()
       exitBewlyWidescreen()
+      releaseNativeWidescreenPreLayout(false)
       if (lastAppliedPlayerModeNavigationKey !== currentNavigationKey)
         applyPlayerModeCompanionSettings()
       return
@@ -642,6 +693,10 @@ else if (shouldInitializeContentScript) {
     let targetPlayerMode = resolveNavigationPlayerMode()
     if (isFestivalPage() && targetPlayerMode === 'bewlyWidescreen')
       targetPlayerMode = 'widescreen'
+
+    // 上次加载记下的默认模式已不适用（设置刚改过）时，尽早恢复原生排版。
+    if (targetPlayerMode !== 'widescreen')
+      releaseNativeWidescreenPreLayout(false)
 
     const isInFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement)
     const webFullscreenBtn = document.querySelector('.bpx-player-ctrl-web,.bilibili-player-video-web-fullscreen') as HTMLElement
@@ -686,6 +741,7 @@ else if (shouldInitializeContentScript) {
     // 如果播放器已经在全屏状态，跳过应用模式（避免互动视频退出全屏）
     if (isInFullscreen || isInWebFullscreen) {
       exitBewlyWidescreen()
+      releaseNativeWidescreenPreLayout(false)
       autoContinuationNavigationKey = undefined
       applyPlayerModeCompanionSettings()
       lastAppliedPlayerModeNavigationKey = currentNavigationKey
@@ -710,11 +766,16 @@ else if (shouldInitializeContentScript) {
     const controller = new AbortController()
     playerModeApplicationController = controller
     playerModeApplicationPending = true
+    const alignedOnLoad = initialPlayerScrollNavigationKey === currentNavigationKey
     const application = {
       signal: controller.signal,
+      skipScroll: alignedOnLoad,
       onSettled: () => {
         if (playerModeApplicationController === controller)
           playerModeApplicationPending = false
+        // 重试耗尽仍未进入宽屏时交还排版；被中止的应用稍后还会重来，先不动。
+        if (!controller.signal.aborted)
+          releaseNativeWidescreenPreLayout(false)
       },
       shouldApply: () => !controller.signal.aborted
         && getVideoNavigationKey(location.href) === currentNavigationKey
@@ -729,6 +790,9 @@ else if (shouldInitializeContentScript) {
         lastAppliedPlayerModeNavigationKey = currentNavigationKey
         autoContinuationNavigationKey = undefined
         lastVideoEndedAt = 0
+        releaseNativeWidescreenPreLayout(targetPlayerMode === 'widescreen')
+        if (alignedOnLoad)
+          initialPlayerScroll?.settle()
       },
     }
 
@@ -761,8 +825,11 @@ else if (shouldInitializeContentScript) {
   }
 
   document.addEventListener('click', (event) => {
-    if (isUserNativeLayoutModeClick(event))
+    if (isUserNativeLayoutModeClick(event)) {
       playerModeChosenByUser = true
+      // 消息在本次点击的处理结束后送达，页面脚本按用户切换后的状态恢复排版。
+      releaseNativeWidescreenPreLayout(false)
+    }
   }, true)
 
   function clearPlayerModeRetry() {
@@ -784,6 +851,7 @@ else if (shouldInitializeContentScript) {
     if (remaining <= 0) {
       if (!isBewlyWidescreenActive())
         exitBewlyWidescreen()
+      releaseNativeWidescreenPreLayout(false)
       return
     }
     playerModeRetryTimer = setTimeout(() => {

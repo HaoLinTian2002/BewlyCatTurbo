@@ -1246,6 +1246,8 @@ settings:
   enlarge_favorite_dialog_desc: 啟用後，影片頁收藏彈窗將以更大的尺寸顯示，方便查看和管理收藏夾。
   external_watch_later_button: 稍後再看按鈕外置
   external_watch_later_button_desc: 啟用後，影片頁工具欄會顯示獨立的稍後觀看按鈕；按鈕會顯示目前影片狀態，可點擊加入或移除。
+  expand_video_desc_by_default: 預設展開影片簡介
+  expand_video_desc_by_default_desc: 啟用後，影片頁的簡介不再摺疊，開啟影片即顯示完整內容；仍可點擊「收起」手動摺疊。
   show_vertical_video_zoom_button: 直式影片放大按鈕
   show_vertical_video_zoom_button_desc: 在直式影片播放器中顯示放大/縮小按鈕與畫面位置調整控制項
   show_bewly_widescreen_button: 顯示播放器 Bewly 寬螢幕按鈕

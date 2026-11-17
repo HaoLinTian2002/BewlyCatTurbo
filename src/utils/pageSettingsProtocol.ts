@@ -1,3 +1,5 @@
+import { stripBilibiliLocalePathname } from './bilibiliLocale'
+
 export type PageCommentReplyTreeMode = 'lineCollapseMain' | 'lineKeepMain' | 'indentOnly'
 export type PageCommentReplyPaginationMode = 'loadMore' | 'pagination'
 
@@ -21,6 +23,8 @@ export interface PageSettingsPayload {
   enableCommentReplyTreeContainer: boolean
   enableCommentReplyTreeDisplay: boolean
   language: string
+  /** 普通视频页默认使用原生宽屏：页面脚本在 document_start 提前按宽屏排版。 */
+  preApplyNativeWidescreen: boolean
   preventMobileRedirect: boolean
   showCommentHostTag: boolean
   showIPLocation: boolean
@@ -42,6 +46,22 @@ function isCommentReplyPaginationMode(value: unknown): value is PageCommentReply
 
 function isCommentReplyTreeContainerHeight(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
+}
+
+/**
+ * /video/ 页在文档开始时还分不清分 P 与合集，只有这些场景都沿用原生宽屏时才能提前排版。
+ */
+function prefersNativeWidescreenOnVideoPage(value: Record<string, unknown>): boolean {
+  if (value.defaultVideoPlayerMode !== 'widescreen')
+    return false
+  if (value.enableVideoPlayerModeOverrides !== true)
+    return true
+
+  const overrides = isRecord(value.videoPlayerModeOverrides) ? value.videoPlayerModeOverrides : {}
+  return ['multipart', 'collection'].every((context) => {
+    const override = overrides[context]
+    return override === undefined || override === 'inherit' || override === 'widescreen'
+  })
 }
 
 export function createPageSettingsPayload(value: unknown): PageSettingsPayload | null {
@@ -93,6 +113,9 @@ export function createPageSettingsPayload(value: unknown): PageSettingsPayload |
     enableCommentReplyTreeContainer: commentsEnabled && value.enableCommentReplyTreeContainer,
     enableCommentReplyTreeDisplay: commentsEnabled && value.enableCommentReplyTreeDisplay,
     language: value.language,
+    // 页面脚本再次校验已转换的 payload 时直接沿用字段。
+    preApplyNativeWidescreen: playerEnabled
+      && (value.preApplyNativeWidescreen === true || prefersNativeWidescreenOnVideoPage(value)),
     preventMobileRedirect: value.preventMobileRedirect,
     showCommentHostTag: commentsEnabled && value.showCommentHostTag,
     showIPLocation: commentsEnabled && value.showIPLocation,
@@ -107,6 +130,7 @@ export function createPageSettingsPayload(value: unknown): PageSettingsPayload |
  * 快照缺失或无法读取时调用方按默认行为处理，不能据此跳过默认开启的功能。
  */
 export interface PageBootSnapshot {
+  preApplyNativeWidescreen: boolean
   preventMobileRedirect: boolean
   skipConciseDanmaku: boolean
 }
@@ -119,6 +143,7 @@ export function readPageBootSnapshot(): Partial<PageBootSnapshot> | null {
     if (!isRecord(value))
       return null
     return {
+      preApplyNativeWidescreen: typeof value.preApplyNativeWidescreen === 'boolean' ? value.preApplyNativeWidescreen : undefined,
       preventMobileRedirect: typeof value.preventMobileRedirect === 'boolean' ? value.preventMobileRedirect : undefined,
       skipConciseDanmaku: typeof value.skipConciseDanmaku === 'boolean' ? value.skipConciseDanmaku : undefined,
     }
@@ -130,6 +155,7 @@ export function readPageBootSnapshot(): Partial<PageBootSnapshot> | null {
 
 export function writePageBootSnapshot(settings: PageSettingsPayload) {
   const snapshot: PageBootSnapshot = {
+    preApplyNativeWidescreen: settings.preApplyNativeWidescreen,
     preventMobileRedirect: settings.preventMobileRedirect,
     skipConciseDanmaku: settings.skipConciseDanmaku,
   }
@@ -140,5 +166,27 @@ export function writePageBootSnapshot(settings: PageSettingsPayload) {
   }
   catch {
     // 存储不可用时下次加载按默认行为安装钩子
+  }
+}
+
+/** 内容脚本通知页面脚本结束宽屏预排版；applied 表示已点击原生宽屏按钮。 */
+export const NATIVE_WIDESCREEN_PRE_LAYOUT_RELEASE = 'BEWLY_NATIVE_WIDESCREEN_PRE_LAYOUT_RELEASE'
+
+/**
+ * 当前文档是否在加载之初就按原生宽屏排版。页面脚本与内容脚本各自在启动时
+ * 同步调用，读到的是同一份快照，结论一致。
+ * 仅限顶层窗口的普通视频页：抽屉与弹窗 iframe 有各自的显示模式覆盖。
+ */
+export function shouldPreApplyNativeWidescreen(snapshot: Partial<PageBootSnapshot> | null): boolean {
+  if (snapshot?.preApplyNativeWidescreen !== true)
+    return false
+
+  try {
+    return window === window.top
+      && location.hostname === 'www.bilibili.com'
+      && stripBilibiliLocalePathname(location.pathname).startsWith('/video/')
+  }
+  catch {
+    return false
   }
 }

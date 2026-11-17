@@ -14,10 +14,11 @@ import { isElectron } from '~/utils/main'
 import type { PageScriptIdentity, PageScriptInitializedMarker, RunningPageScriptIdentity } from '~/utils/pageScriptIdentity'
 import { createPageScriptIdentityMessage, isPageScriptIdentity, PAGE_SCRIPT_PING } from '~/utils/pageScriptIdentity'
 import type { PageSettingsPayload } from '~/utils/pageSettingsProtocol'
-import { createPageSettingsPayload, readPageBootSnapshot } from '~/utils/pageSettingsProtocol'
+import { createPageSettingsPayload, readPageBootSnapshot, shouldPreApplyNativeWidescreen } from '~/utils/pageSettingsProtocol'
 
 import { version } from '../../package.json'
 import { createLocalLoudnessController } from './audio/localLoudness'
+import { installNativeWidescreenPreLayout } from './nativeWidescreenPreLayout'
 
 // 存储当前设置状态
 let currentSettings: PageSettingsPayload | null = null
@@ -97,6 +98,10 @@ else if (shouldInitializePageScript) {
   const isBilibiliWwwPage = isBilibiliWwwUrl(location.href)
   // 启动快照来自主站上一次加载；跨子域或快照缺失时为 null，按默认行为处理。
   const pageBootSnapshot = isBilibiliWwwPage ? readPageBootSnapshot() : null
+
+  // 默认原生宽屏时赶在 B 站首次排版前生效，避免加载完成后整页从普通排版切到宽屏。
+  if (shouldPreApplyNativeWidescreen(pageBootSnapshot))
+    installNativeWidescreenPreLayout()
 
   // 根据兼容性设置动态返回桌面 UA，默认保持浏览器原始值。
   // 防移动端跳转默认关闭，快照确认关闭时不改写 navigator；刚开启时由网络层

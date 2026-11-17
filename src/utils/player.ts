@@ -225,6 +225,8 @@ export interface PlayerModeApplication {
   onApplied: () => void
   signal?: AbortSignal
   onSettled?: () => void
+  /** 页面加载之初已对齐过播放器位置时，不再在应用模式后延迟滚动一次。 */
+  skipScroll?: boolean
 }
 
 function schedulePlayerModeEffect(effect: () => void, delay: number, signal?: AbortSignal) {
@@ -269,6 +271,31 @@ function isCommentDeepLink() {
     return true
   const params = new URLSearchParams(location.search)
   return params.has('comment_root_id') || params.has('comment_secondary_id')
+}
+
+/**
+ * 按「调整显示模式后滚动」的设置计算页面应停在的纵向位置；未启用或播放器
+ * 容器还没有排版时返回 null。弹幕发送栏贴在播放器容器底部，播放器初始化前
+ * 直接取容器底边，结果一致。
+ */
+export function getPlayerScrollTarget(): number | null {
+  if (!settings.value.videoPlayerScroll || isCommentDeepLink())
+    return null
+
+  const playerElement = document.querySelector(_videoClassTag.player)
+  if (!playerElement)
+    return null
+
+  const playerRect = playerElement.getBoundingClientRect()
+  if (playerRect.height <= 0)
+    return null
+
+  if (settings.value.videoPlayerScrollMode === 'playerCenter')
+    return Math.max(0, window.scrollY + playerRect.top + playerRect.height / 2 - window.innerHeight / 2)
+
+  const sendingBarRect = document.querySelector('.bpx-player-sending-bar')?.getBoundingClientRect()
+  const bottom = sendingBarRect && sendingBarRect.height > 0 ? sendingBarRect.bottom : playerRect.bottom
+  return Math.max(0, window.scrollY + bottom - window.innerHeight)
 }
 
 // 将播放器滚动到设置的位置
@@ -330,7 +357,8 @@ export function widescreen(application?: PlayerModeApplication) {
     if (document.querySelector('[data-screen=\'wide\']')) {
       application?.onApplied()
       // 即使已经是宽屏状态，也执行滚动和倍速记忆
-      scrollPlayerToOptimalPosition(1000, application?.signal)
+      if (!application?.skipScroll)
+        scrollPlayerToOptimalPosition(1000, application?.signal)
       schedulePlayerModeEffect(applyPlayerEnhancements, 1000, application?.signal)
       return true
     }
@@ -338,7 +366,8 @@ export function widescreen(application?: PlayerModeApplication) {
     const result = widescreenClick()
     if (result) {
       application?.onApplied()
-      scrollPlayerToOptimalPosition(1000, application?.signal)
+      if (!application?.skipScroll)
+        scrollPlayerToOptimalPosition(1000, application?.signal)
       // 在成功进入宽屏后应用倍速记忆
       schedulePlayerModeEffect(applyPlayerEnhancements, 1000, application?.signal)
     }
@@ -379,7 +408,8 @@ export function defaultMode(application?: PlayerModeApplication) {
     application.onSettled?.()
     return false
   }
-  scrollPlayerToOptimalPosition(1000, application?.signal)
+  if (!application?.skipScroll)
+    scrollPlayerToOptimalPosition(1000, application?.signal)
   // 在默认模式下也应用倍速记忆
   schedulePlayerModeEffect(applyPlayerEnhancements, 2000, application?.signal)
   application?.onApplied()

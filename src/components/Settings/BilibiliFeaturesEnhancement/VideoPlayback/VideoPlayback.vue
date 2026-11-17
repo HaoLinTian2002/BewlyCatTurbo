@@ -397,6 +397,14 @@ const playerDefaultStateOptions = computed<{ label: string, value: PlayerDefault
         </SettingsItem>
 
         <SettingsItem
+          :title="t('settings.expand_video_desc_by_default')"
+          :desc="t('settings.expand_video_desc_by_default_desc')"
+          right-width="auto"
+        >
+          <Radio v-model="settings.expandVideoDescByDefault" />
+        </SettingsItem>
+
+        <SettingsItem
           :title="t('settings.show_vertical_video_zoom_button')"
           :desc="t('settings.show_vertical_video_zoom_button_desc')"
           right-width="auto"
