@@ -293,6 +293,8 @@ else if (shouldInitializePageScript) {
   const COMMENT_REPLY_TREE_ROOT_KEY = 'thread-root'
   const COMMENT_REPLY_CONTAINER_ATTRIBUTE = 'data-bewly-comment-reply-container'
   const COMMENT_REPLY_CONTAINER_HEIGHT_VAR = '--bew-comment-reply-container-height'
+  /** 回复容器内还有未滚到的内容，吸底栏正压在回复上 */
+  const COMMENT_REPLY_FOOTER_STUCK_ATTRIBUTE = 'data-bewly-comment-reply-footer-stuck'
   const COMMENT_REPLY_TREE_CONTAINER_MIN_HEIGHT = 240
   const COMMENT_REPLY_TREE_CONTAINER_MAX_HEIGHT = 960
   const COMMENT_REPLY_TREE_CONTAINER_DEFAULT_HEIGHT = 480
@@ -448,6 +450,41 @@ else if (shouldInitializePageScript) {
           color: var(--bew-text-3) !important;
         }
 
+        /*
+         * 底栏操作（点击查看、页码、加载更多、收起）统一为中性胶囊，悬停时文字转主题色。
+         * bili-text-button 的文字颜色、高度与左右留白由其内部变量控制；当前页码的
+         * 高亮色写在内联变量里，优先级高于这里，保持不变。
+         */
+        #expander-footer bili-text-button {
+          --_container-height: var(--bew-space-6, 24px);
+          --_leading-space: var(--bew-space-3, 12px);
+          --_trailing-space: var(--bew-space-3, 12px);
+          --_label-text-color: var(--bew-text-2, var(--text2, #61666d));
+          --_label-text-color-hover: var(--bew-theme-color, var(--brand_blue, #00aeec));
+          border-radius: var(--bew-badge-radius, 9999px);
+          background: var(--bew-fill-1, var(--graph_bg_thin, #f1f2f3));
+          transition: background-color var(--bew-duration-fast, 150ms) var(--bew-ease-standard, ease);
+        }
+
+        #expander-footer bili-text-button:not([disabled]):hover {
+          background: var(--bew-fill-2, var(--graph_bg_regular, #e3e5e7));
+        }
+
+        #expander-footer bili-text-button[disabled] {
+          opacity: 0.6;
+        }
+
+        #view-more {
+          display: flex;
+          align-items: center;
+          column-gap: var(--bew-space-2, 8px);
+        }
+
+        /* 插件追加的「加载 N 页」是本行的主要操作，用主题色文字点缀 */
+        #pagination #pagination-body > [data-idx="${COMMENT_REPLY_EXPAND_ALL_IDX}"] {
+          --_label-text-color: var(--bew-theme-color, var(--brand_blue, #00aeec));
+        }
+
         #pagination-head:has(+ #${COMMENT_REPLY_PAGE_HEAD_ID}) {
           display: none !important;
         }
@@ -492,9 +529,6 @@ else if (shouldInitializePageScript) {
         }
 
         #view-more:has(> #${COMMENT_REPLY_EXPAND_ALL_ID}) {
-          display: flex;
-          align-items: center;
-          column-gap: var(--bew-space-2, 8px);
           width: 100%;
           box-sizing: border-box;
         }
@@ -516,22 +550,32 @@ else if (shouldInitializePageScript) {
         #pagination #pagination-body > [data-idx="${COMMENT_REPLY_EXPAND_ALL_IDX}"] {
           order: 2;
           flex-shrink: 0;
-          margin-inline-start: var(--bew-space-6, 24px);
+          margin-inline-start: var(--bew-space-2, 8px);
           margin-inline-end: 0;
         }
 
+        /* 与原生 bili-text-button 胶囊同规格，列间距由 #view-more 的 column-gap 提供 */
         #${COMMENT_REPLY_EXPAND_ALL_ID} {
+          display: inline-flex;
+          align-items: center;
           flex-shrink: 0;
-          min-height: var(--bew-space-6, 24px);
-          margin-inline-start: var(--bew-space-4, 16px);
-          padding: 0;
+          box-sizing: border-box;
+          height: var(--bew-space-6, 24px);
+          margin: 0;
+          padding: 0 var(--bew-space-3, 12px);
           border: 0;
-          background: transparent;
-          color: var(--bew-text-3, var(--text3, #9499a0));
+          border-radius: var(--bew-badge-radius, 9999px);
+          background: var(--bew-fill-1, var(--graph_bg_thin, #f1f2f3));
+          color: var(--bew-theme-color, var(--brand_blue, #00aeec));
           font: inherit;
           line-height: inherit;
           cursor: pointer;
           white-space: nowrap;
+          transition: background-color var(--bew-duration-fast, 150ms) var(--bew-ease-standard, ease);
+        }
+
+        #${COMMENT_REPLY_EXPAND_ALL_ID}:hover:not(:disabled) {
+          background: var(--bew-fill-2, var(--graph_bg_regular, #e3e5e7));
         }
 
         #${COMMENT_REPLY_EXPAND_ALL_ID}:active:not(:disabled) {
@@ -541,7 +585,6 @@ else if (shouldInitializePageScript) {
         #${COMMENT_REPLY_EXPAND_ALL_ID}:focus-visible {
           outline: 2px solid var(--bew-theme-color, #00aeec);
           outline-offset: 2px;
-          border-radius: var(--bew-radius-sm, 4px);
         }
 
         #${COMMENT_REPLY_EXPAND_ALL_ID}:disabled {
@@ -652,11 +695,19 @@ else if (shouldInitializePageScript) {
           isolation: isolate;
         }
 
-        /* 原生「收起回复」在回复列表末尾；滚动时钉在容器底边保持可达 */
+        /*
+         * 原生「收起回复」在回复列表末尾；滚动时钉在容器底边保持可达。
+         * 评论区背后可能是壁纸、毛玻璃或宽屏侧栏，没有一个底色能与之完全一致，
+         * 因此默认透明，只在吸底栏确实压住回复时才铺底色遮住下方内容。
+         */
         :host([${COMMENT_REPLY_CONTAINER_ATTRIBUTE}]) #expander-contents > #expander-footer {
           position: sticky;
           bottom: 0;
           z-index: 1;
+          transition: background-color var(--bew-duration-fast, 150ms) var(--bew-ease-standard, ease);
+        }
+
+        :host([${COMMENT_REPLY_CONTAINER_ATTRIBUTE}][${COMMENT_REPLY_FOOTER_STUCK_ATTRIBUTE}]) #expander-contents > #expander-footer {
           /* 宽屏侧栏和原生评论区可有独立底色，不能优先取全局页面背景。 */
           background: var(--bewly-widescreen-sidebar-bg, var(--bg1, var(--bew-bg, #fff)));
           -webkit-backdrop-filter: var(--bew-comment-sticky-footer-filter, none);
@@ -3016,6 +3067,53 @@ else if (shouldInitializePageScript) {
       component.style.setProperty(COMMENT_REPLY_CONTAINER_HEIGHT_VAR, `${getCommentReplyContainerHeight()}px`)
     else
       component.style.removeProperty(COMMENT_REPLY_CONTAINER_HEIGHT_VAR)
+    watchCommentReplyFooterStuck(component, enabled)
+  }
+
+  interface CommentReplyFooterStuckWatcher {
+    container: HTMLElement
+    abort: AbortController
+    observer: ResizeObserver
+  }
+
+  const commentReplyFooterStuckWatchers = new WeakMap<HTMLElement, CommentReplyFooterStuckWatcher>()
+
+  function syncCommentReplyFooterStuck(component: HTMLElement, container: HTMLElement) {
+    // 内容超出容器且还没滚到底时，吸底栏下方才有回复；1px 容差覆盖小数滚动位置。
+    const remaining = container.scrollHeight - container.clientHeight - container.scrollTop
+    component.toggleAttribute(COMMENT_REPLY_FOOTER_STUCK_ATTRIBUTE, remaining > 1)
+  }
+
+  /**
+   * 跟踪吸底栏是否压在回复上。滚动与容器尺寸变化在这里监听；容器已到
+   * 最大高度后继续追加回复不会改变容器尺寸，由每次回复树更新时调用的
+   * applyCommentReplyContainer 重新同步。
+   */
+  function watchCommentReplyFooterStuck(component: HTMLElement, enabled: boolean) {
+    const container = enabled
+      ? component.shadowRoot?.querySelector<HTMLElement>('#expander-contents') ?? null
+      : null
+    const watcher = commentReplyFooterStuckWatchers.get(component)
+    if (watcher && watcher.container !== container) {
+      watcher.abort.abort()
+      watcher.observer.disconnect()
+      commentReplyFooterStuckWatchers.delete(component)
+    }
+
+    if (!container) {
+      component.removeAttribute(COMMENT_REPLY_FOOTER_STUCK_ATTRIBUTE)
+      return
+    }
+
+    if (!commentReplyFooterStuckWatchers.has(component)) {
+      const abort = new AbortController()
+      const sync = () => syncCommentReplyFooterStuck(component, container)
+      container.addEventListener('scroll', sync, { passive: true, signal: abort.signal })
+      const observer = new ResizeObserver(sync)
+      observer.observe(container)
+      commentReplyFooterStuckWatchers.set(component, { container, abort, observer })
+    }
+    syncCommentReplyFooterStuck(component, container)
   }
 
   /**
