@@ -314,8 +314,6 @@ export interface Settings {
   localLoudnessEnabled: boolean
   localLoudnessTarget: number
   localLoudnessStrength: number
-  touchScreenOptimization: boolean
-  showHomeButtonInTouchMode: boolean
   openTopBarItemsInBewly: boolean
   enableGridLayoutSwitcher: boolean
   enableHorizontalScrolling: boolean
@@ -701,8 +699,6 @@ export const originalSettings: Settings = {
   localLoudnessEnabled: false,
   localLoudnessTarget: -18,
   localLoudnessStrength: 75,
-  touchScreenOptimization: false,
-  showHomeButtonInTouchMode: true,
   openTopBarItemsInBewly: true,
   enableGridLayoutSwitcher: true,
   enableHorizontalScrolling: false,
@@ -1439,6 +1435,10 @@ export const settings = useSettingsStorage(originalSettings, {
 
     // 「想看」分组已移除，清理旧版本保存的开关。
     Reflect.deleteProperty(record, 'momentsEnableWantedFilter')
+
+    // 触屏体验改进已移除，清理旧版本保存的开关。
+    Reflect.deleteProperty(record, 'touchScreenOptimization')
+    Reflect.deleteProperty(record, 'showHomeButtonInTouchMode')
 
     const legacyRandomPlayOrder = record.randomPlayOrder
     if (

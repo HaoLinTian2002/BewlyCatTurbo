@@ -265,8 +265,6 @@ const baseSettingsSearchEntries: SettingsSearchEntry[] = [
     'settings.menu_general',
     'settings.group_language',
     'settings.select_language',
-    'settings.group_interaction',
-    'settings.touch_screen_optimization',
   ]),
   ...createEntries(interactionRoute, [
     'settings.plugin.interaction',
@@ -490,7 +488,6 @@ const baseSettingsSearchEntries: SettingsSearchEntry[] = [
   ...createEntries(topBarRoute, [
     'settings.topbar_logo_and_channels',
     'settings.top_bar_logo_style',
-    'settings.show_home_button_in_touch_mode',
   ]),
   ...createEntries(topBarRoute, [
     'settings.group_topbar_pinned_channels',
@@ -925,7 +922,6 @@ const fallbackTargetKeysByTitleKey: Record<string, string> = {
   'settings.resume_from_video_preview': 'settings.enable_video_preview',
   'settings.search_page_mode_wallpaper_fixed': 'settings.use_search_page_mode',
   'settings.settings_shared_with_the_search_page': 'settings.use_search_page_mode',
-  'settings.show_home_button_in_touch_mode': 'settings.topbar_logo_and_channels',
   'settings.sidebar_position': 'settings.module_sidebar',
   'settings.theme_schedule': 'settings.theme',
   'settings.third_party_licenses': 'settings.open_source_license',

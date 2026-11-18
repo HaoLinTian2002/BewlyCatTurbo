@@ -1,9 +1,6 @@
 import { useEventListener } from '@vueuse/core'
 import type { Ref } from 'vue'
 
-import { settings } from '~/logic'
-
-// Hover and focus-triggered opening are disabled when touchscreen optimization is enabled.
 export function useDelayedHover({ enterDelay = 300, leaveDelay = 300, beforeEnter, enter, beforeLeave, leave }:
 { enterDelay?: number, leaveDelay?: number, beforeEnter?: () => void, enter: () => void, beforeLeave?: () => void, leave: () => void }) {
   const el = ref<HTMLElement>() as Ref<HTMLElement | undefined> & { reset: () => void }
@@ -144,7 +141,7 @@ export function useDelayedHover({ enterDelay = 300, leaveDelay = 300, beforeEnte
   }
 
   watch(el, (element, _, onCleanup) => {
-    if (element && !settings.value.touchScreenOptimization)
+    if (element)
       addInteractionListeners(element)
 
     onCleanup(() => {
@@ -152,19 +149,6 @@ export function useDelayedHover({ enterDelay = 300, leaveDelay = 300, beforeEnte
         removeInteractionListeners(element)
     })
   }, { flush: 'post' })
-
-  watch(() => settings.value.touchScreenOptimization, (newValue) => {
-    if (newValue) {
-      clearHoverTimers()
-      focusWithin = false
-      mouseWithin = false
-      if (el.value)
-        removeInteractionListeners(el.value)
-    }
-    else if (el.value) {
-      addInteractionListeners(el.value)
-    }
-  }, { immediate: true })
 
   onScopeDispose(clearHoverTimers)
 

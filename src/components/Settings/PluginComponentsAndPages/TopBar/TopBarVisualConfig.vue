@@ -189,7 +189,6 @@ watch(topBarComponents, ensureTopBarComponentsConfig, { immediate: true })
         <Radio v-model="settings.enableTopBar" :label="settings.enableTopBar ? $t('settings.chk_box.show') : $t('settings.chk_box.hidden')" />
       </SettingsItem>
       <SettingsItem
-        v-if="!settings.touchScreenOptimization"
         :title="$t('settings.open_top_bar_items_in_bewly')"
         :desc="$t('settings.open_top_bar_items_in_bewly_desc')"
         right-width="auto"
@@ -269,15 +268,6 @@ watch(topBarComponents, ensureTopBarComponentsConfig, { immediate: true })
             />
           </button>
         </div>
-      </SettingsItem>
-
-      <SettingsItem
-        v-if="settings.touchScreenOptimization"
-        :title="$t('settings.show_home_button_in_touch_mode')"
-        :desc="$t('settings.show_home_button_in_touch_mode_desc')"
-        right-width="auto"
-      >
-        <Radio v-model="settings.showHomeButtonInTouchMode" />
       </SettingsItem>
     </SettingsItemGroup>
 

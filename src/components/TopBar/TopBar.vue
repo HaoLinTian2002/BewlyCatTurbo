@@ -596,25 +596,6 @@ function setupConflictingHeaderObserver() {
   scheduleConflictingHeaderVisibilityUpdate()
 }
 
-// 处理点击外部关闭 POP 窗（仅在触屏优化开启时）
-function handleClickOutsidePopup(event: MouseEvent) {
-  if (!settings.value.touchScreenOptimization)
-    return
-
-  if (!hasActivePopup.value)
-    return
-
-  // document receives the Shadow Host as event.target. Inspect the original
-  // path so opening a panel and interacting inside it never count as outside.
-  const isInside = event.composedPath().some(target => target instanceof Element
-    && target.matches('.logo, .right-side-item, .home-button, .bew-popover, [data-top-bar-panel-anchor]'))
-  if (isInside)
-    return
-
-  // 点击在弹窗外部，关闭所有弹窗
-  topBarStore.closeAllPopups()
-}
-
 // 生命周期钩子
 onMounted(() => {
   nextTick(() => {
@@ -638,8 +619,6 @@ onMounted(() => {
     window.addEventListener('pageshow', scheduleUrlChangeCheck)
     scheduleUrlChangeCheck()
 
-    // 添加全局点击事件监听器（用于触屏模式下点击外部关闭弹窗）
-    document.addEventListener('click', handleClickOutsidePopup)
     document.addEventListener('visibilitychange', handleVisibilityChange)
   })
 })
@@ -673,7 +652,6 @@ onUnmounted(() => {
   topBarStore.drawerVisible.notifications = false
 
   // 移除全局点击事件监听器
-  document.removeEventListener('click', handleClickOutsidePopup)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('pushstate', scheduleUrlChangeCheck)
   window.removeEventListener('replacestate', scheduleUrlChangeCheck)

@@ -245,7 +245,6 @@ settings:
   module_shortcuts: 鍵盤快捷鍵
   module_shortcuts_desc: 外掛提供的播放器和首頁快捷鍵。
   category_bilibili_moments_desc: 調整原版動態頁的模組和評論行為，並過濾動態。
-  group_interaction: 互動
   category_browsing_home_desc: 設定首頁推薦、內容過濾、關注頁和首頁分頁。
   category_browsing_video_card_desc: 設定影片卡片的版面、預覽、資訊顯示與開啟方式。
   category_browsing_favorites_desc: 依規則整理收藏夾，並在一鍵三連後自動同步到對應收藏夾。
@@ -366,7 +365,7 @@ settings:
   group_random_play_settings_desc: 設定自訂播放預設值為「隨機播放」時的啟用方式。
   group_topbar: 頂部列
   topbar_logo_and_channels: Logo 設定
-  topbar_logo_and_channels_desc: 設定頂部列 Logo 樣式，以及觸控模式下是否顯示首頁按鈕。
+  topbar_logo_and_channels_desc: 設定頂部列 Logo 樣式。
   topbar_switchers: BewlyCat/Bilibili 頁面切換器
   topbar_switchers_desc: 控制 BewlyCat 與 Bilibili 原版頁面切換器是否顯示。
   topbar_actions: 頂部列功能圖示
@@ -488,13 +487,8 @@ settings:
     authorize: 授權
     revoke: 解除授權
     open_settings: 打開設定...
-  touch_screen_optimization: 改進觸控螢幕體驗
-  touch_screen_optimization_desc: |
-    啟用後，如頂部列，你可能需要點選項目才能看到更多資訊，而不是滑鼠移過去就會顯示。影片頁支援雙擊播放、暫停或快進快退，按住左右滑動調整播放進度，以及從播放器左右邊緣上下滑動調整音量。（舊版頂部列不支援此功能）
-  show_home_button_in_touch_mode: 顯示 Home 按鈕
-  show_home_button_in_touch_mode_desc: 在觸控螢幕優化開啟時，在頂部列 Logo 旁邊顯示一個可以直接跳轉到首頁的按鈕。
   open_top_bar_items_in_bewly: 點選頂部列圖示開啟 Bewly 頁面
-  open_top_bar_items_in_bewly_desc: 未啟用觸控螢幕優化時，點選 Logo、動態、收藏、歷史或稍後再看圖示，將依照「頂部列連結開啟行為」開啟 Dock 中對應的頁面。
+  open_top_bar_items_in_bewly_desc: 點選 Logo、動態、收藏、歷史或稍後再看圖示，將依照「頂部列連結開啟行為」開啟 Dock 中對應的頁面。
   show_bewly_or_bili_page_switcher_desc: 在首頁 Logo 旁顯示切換器，用於在 BewlyCat 頁面與 Bilibili 原版頁面之間切換。
   show_bewly_or_bili_page_switcher_on_more_pages_desc: 在動態、搜尋、番劇、收藏、歷史和稍後再看等 Bilibili 原版頁面顯示切換器；切換到 BewlyCat 時會開啟對應的插件頁面。
   hide_lv6_last_login_location_in_top_bar_user_pop: 隱藏 LV6 等級最後登入資訊顯示

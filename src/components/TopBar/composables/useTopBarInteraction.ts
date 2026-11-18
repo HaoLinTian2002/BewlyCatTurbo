@@ -45,8 +45,6 @@ export function useTopBarInteraction() {
   const topBarItemElements: Partial<Record<TopBarPopupKey, Ref<HTMLElement | undefined> & { reset?: () => void }>> = {}
   const topBarTransformers = reactive<Partial<Record<TopBarPopupKey, Ref<any>>>>({})
 
-  // 当前点击的顶栏项
-  const currentClickedTopBarItem = ref<string | null>(null)
   const handledClickEvents = new WeakSet<MouseEvent>()
 
   // 获取 App Provider
@@ -257,7 +255,7 @@ export function useTopBarInteraction() {
   }
 
   function getTopBarItemHref(key: string, originalHref: string): string {
-    if (settings.value.touchScreenOptimization || !settings.value.openTopBarItemsInBewly || settings.value.useOriginalBilibiliHomepage)
+    if (!settings.value.openTopBarItemsInBewly || settings.value.useOriginalBilibiliHomepage)
       return originalHref
 
     const page = bewlyPageByTopBarItem[key]
@@ -270,16 +268,6 @@ export function useTopBarInteraction() {
 
     if (!isTopBarPopupKey(key, topBarStore.popupVisible))
       return
-
-    if (settings.value.touchScreenOptimization) {
-      handledClickEvents.add(event)
-      event.preventDefault()
-      event.stopPropagation()
-      closeAllPopups(key)
-      topBarStore.popupVisible[key] = !topBarStore.popupVisible[key]
-      currentClickedTopBarItem.value = key
-      return
-    }
 
     if (!settings.value.openTopBarItemsInBewly || settings.value.useOriginalBilibiliHomepage || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
       return
@@ -298,16 +286,6 @@ export function useTopBarInteraction() {
     openConfiguredPageFromTopBar(page)
   }
 
-  function handleClickTopBarLogo(event: MouseEvent) {
-    if (!settings.value.touchScreenOptimization)
-      return
-
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
-      return
-
-    handleClickTopBarItem(event, 'channels')
-  }
-
   // 处理通知项点击
   function handleNotificationsItemClick(item: { name: string, url: string, unreadCount: number, icon: string }) {
     if (settings.value.openNotificationsPageAsDrawer) {
@@ -317,11 +295,9 @@ export function useTopBarInteraction() {
   }
 
   return {
-    currentClickedTopBarItem,
     setupTopBarItemHoverEvent,
     setupTopBarItemTransformer,
     handleClickTopBarItem,
-    handleClickTopBarLogo,
     handleNotificationsItemClick,
     getTopBarItemHref,
     forceWhiteIcon,

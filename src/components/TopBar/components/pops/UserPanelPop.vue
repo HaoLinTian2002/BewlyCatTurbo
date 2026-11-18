@@ -9,7 +9,7 @@ import api from '~/utils/api'
 import { revokeAccessKey } from '~/utils/authProvider'
 import { numFormatter } from '~/utils/dataFormatter'
 import { LV0_ICON, LV1_ICON, LV2_ICON, LV3_ICON, LV4_ICON, LV5_ICON, LV6_ICON, LV6_LIGHTNING_ICON } from '~/utils/lvIcons'
-import { getCSRF, getUserID, isActualHomepage, isHomePage } from '~/utils/main'
+import { getCSRF, getUserID } from '~/utils/main'
 
 import type { UserInfo, UserStat } from '../../types'
 
@@ -169,24 +169,6 @@ function getLvIcon(level: number, isSigma: boolean = false): string {
   }
   return levelIcons[level] || ''
 }
-
-function handleClickChannel() {
-  if (settings.value.topBarLinkOpenMode === 'newTab') {
-    window.open(`https://space.bilibili.com/${mid.value}`, '_blank')
-  }
-  else if (settings.value.topBarLinkOpenMode === 'currentTabIfNotHomepage') {
-    if (isHomePage())
-      window.open(`https://space.bilibili.com/${mid.value}`, '_blank')
-    else
-      window.open(`https://space.bilibili.com/${mid.value}`, '_self')
-  }
-  else if (settings.value.topBarLinkOpenMode === 'currentTabIfHomepage') {
-    window.open(`https://space.bilibili.com/${mid.value}`, isActualHomepage() ? '_self' : '_blank')
-  }
-  else {
-    window.open(`https://space.bilibili.com/${mid.value}`, '_self')
-  }
-}
 </script>
 
 <template>
@@ -203,13 +185,7 @@ function handleClickChannel() {
       text="xl" font-medium flex="~ items-center gap-2"
       pt-4 pl-4
     >
-      <Button
-        v-if="settings.touchScreenOptimization"
-        type="secondary" strong @click="handleClickChannel"
-      >
-        {{ userInfo.uname ? userInfo.uname : '-' }}
-      </Button>
-      <span v-else>
+      <span>
         {{ userInfo.uname ? userInfo.uname : '-' }}
       </span>
     </div>

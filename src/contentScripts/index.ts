@@ -67,7 +67,6 @@ import { initImmersiveFeedFrame } from './immersiveFeedFrame'
 import { initKeyboardVolumeStep } from './keyboardVolumeStep'
 import { initLocalLoudnessControl } from './localLoudnessControl'
 import type { PageLoadingGuard } from './pageLoading'
-import { initTouchPlayerGestures } from './touchPlayerGestures'
 import { initVideoAspectRatioMemory } from './videoAspectRatioMemory'
 import { initVideoPipButtonControl } from './videoPipButtonControl'
 import { initVideoQualityMemory } from './videoQualityMemory'
@@ -1577,7 +1576,6 @@ else if (shouldInitializeContentScript) {
       initLocalLoudnessControl()
       initAmbilightControl()
       runWhenNativeVideoHeaderStable(initBewlyWidescreenControl)
-      initTouchPlayerGestures()
       initFullscreenWheelVolume()
       initKeyboardVolumeStep()
     }

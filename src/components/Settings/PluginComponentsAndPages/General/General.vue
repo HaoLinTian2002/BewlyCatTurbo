@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 
-import Radio from '~/components/Radio.vue'
 import Select from '~/components/Select.vue'
 import { settings } from '~/logic'
 
@@ -53,12 +52,6 @@ watch(() => settings.value.language, (newValue) => {
           :options="langOptions"
           w="160px"
         />
-      </SettingsItem>
-    </SettingsItemGroup>
-
-    <SettingsItemGroup :title="$t('settings.group_interaction')">
-      <SettingsItem :title="$t('settings.touch_screen_optimization')" :desc="$t('settings.touch_screen_optimization_desc')" right-width="auto">
-        <Radio v-model="settings.touchScreenOptimization" />
       </SettingsItem>
     </SettingsItemGroup>
 

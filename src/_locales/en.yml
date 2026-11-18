@@ -245,7 +245,6 @@ settings:
   module_shortcuts: Keyboard shortcuts
   module_shortcuts_desc: Player and home page shortcuts provided by the extension.
   category_bilibili_moments_desc: 'Adjust modules and comment behavior on the original moments page, and filter moments.'
-  group_interaction: Interaction
   category_browsing_home_desc: Configure home recommendations, content filters, following, and home tabs.
   category_browsing_video_card_desc: Configure video card layout, previews, metadata, and link behavior.
   category_browsing_favorites_desc: Organize favorite folders by rules and sync videos after a triple action.
@@ -366,7 +365,7 @@ settings:
   group_random_play_settings_desc: Configure how Random starts when it is the effective custom playback default.
   group_topbar: Top Bar
   topbar_logo_and_channels: Logo settings
-  topbar_logo_and_channels_desc: Choose the top bar Logo style and whether to show the home button in touch mode.
+  topbar_logo_and_channels_desc: Choose the top bar Logo style.
   topbar_switchers: BewlyCat/Bilibili page switcher
   topbar_switchers_desc: Control the switcher between BewlyCat and original Bilibili pages.
   topbar_actions: Top bar actions
@@ -492,17 +491,8 @@ settings:
     authorize: Authorize
     revoke: Revoke
     open_settings: Open Settings...
-  touch_screen_optimization: Touch screen optimization
-  touch_screen_optimization_desc: >
-    After this setting is turned on, like the top bar, you must click on items
-    to view more information instead of hovering over them. (This feature is not
-    supported by the old top bar.) On video pages, double-tap to play, pause, or
-    seek, drag horizontally to scrub through the video, and swipe vertically
-    from either player edge to adjust volume.
-  show_home_button_in_touch_mode: Show Home button
-  show_home_button_in_touch_mode_desc: When touch screen optimization is enabled, show a Home button next to the top bar Logo to navigate directly to the homepage.
   open_top_bar_items_in_bewly: Open Bewly pages from top bar icons
-  open_top_bar_items_in_bewly_desc: When touch screen optimization is off, the Logo, Moments, Favorites, History, and Watch Later icons open the corresponding Dock page using the top bar link opening behavior.
+  open_top_bar_items_in_bewly_desc: The Logo, Moments, Favorites, History, and Watch Later icons open the corresponding Dock page using the top bar link opening behavior.
   show_bewly_or_bili_page_switcher_desc: Show a switcher next to the homepage Logo to move between the BewlyCat and original Bilibili pages.
   show_bewly_or_bili_page_switcher_on_more_pages_desc: Show the switcher on original Bilibili pages such as Moments, Search, Anime, Favorites, History, and Watch Later. Switching to BewlyCat opens the corresponding plugin page.
   hide_lv6_last_login_location_in_top_bar_user_pop: Hide LV6 last login info

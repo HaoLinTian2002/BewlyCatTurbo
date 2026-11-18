@@ -17,7 +17,7 @@ defineProps<{
   forceWhiteIcon: boolean
 }>()
 
-const { handleClickTopBarLogo, setupTopBarItemHoverEvent } = useTopBarInteraction()
+const { setupTopBarItemHoverEvent } = useTopBarInteraction()
 const { isLayoutEditing } = useLayoutEditMode()
 const topBarStore = useTopBarStore()
 const { popupVisible } = storeToRefs(topBarStore)
@@ -30,21 +30,7 @@ function handleLogoClick(event: MouseEvent) {
     event.preventDefault()
     event.stopPropagation()
     topBarStore.closeAllPopups()
-    return
   }
-
-  handleClickTopBarLogo(event)
-}
-
-function handleHomeClick(event: MouseEvent) {
-  if (isLayoutEditing.value) {
-    event.preventDefault()
-    event.stopPropagation()
-    topBarStore.closeAllPopups()
-    return
-  }
-
-  topBarStore.closeAllPopups()
 }
 
 watch(isLayoutEditing, (editing) => {
@@ -131,30 +117,6 @@ watch(isLayoutEditing, (editing) => {
             </Transition>
           </TopBarItemEditor>
         </div>
-
-        <!-- 首页按钮（仅在触屏模式下显示） -->
-        <a
-          v-if="settings.touchScreenOptimization && settings.showHomeButtonInTouchMode"
-          href="//www.bilibili.com"
-          target="_top"
-          class="group home-button"
-          grid="~ place-items-center"
-          duration-300
-          bg="hover:$bew-theme-color"
-          shrink-0
-          @click="handleHomeClick"
-        >
-          <div
-            class="i-mingcute:home-3-fill home-icon"
-            w="24px" h="24px"
-            :style="{
-              color: forceWhiteIcon ? 'white' : 'var(--bew-theme-color)',
-              filter: forceWhiteIcon
-                ? 'drop-shadow(0 0 4px rgba(0, 0, 0, 0.6))'
-                : 'drop-shadow(0 0 4px var(--bew-theme-color-60))',
-            }"
-          />
-        </a>
       </div>
 
       <BewlyOrBiliPageSwitcher :force-white-icon="forceWhiteIcon" z-1 />
@@ -239,24 +201,6 @@ watch(isLayoutEditing, (editing) => {
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-size: contain;
     filter: drop-shadow(0 0 4px currentColor);
-  }
-}
-
-.home-button {
-  width: var(--bew-top-bar-primary-control-height);
-  height: var(--bew-top-bar-primary-control-height);
-  border-radius: var(--bew-top-bar-primary-control-radius);
-
-  .home-icon {
-    transition:
-      color var(--bew-duration-moderate) var(--bew-ease-standard),
-      filter var(--bew-duration-moderate) var(--bew-ease-standard),
-      transform var(--bew-duration-moderate) var(--bew-ease-emphasized);
-  }
-
-  &:hover .home-icon {
-    color: white !important;
-    filter: none !important;
   }
 }
 
